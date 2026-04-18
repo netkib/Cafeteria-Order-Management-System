@@ -1,0 +1,20 @@
+# dependencies
+node_modules
+
+# builds
+dist
+build
+
+# logs
+*.log
+
+# env
+.env
+.env.file
+
+# test output
+coverage
+
+# OS/editor
+.DS_Store
+.vscode

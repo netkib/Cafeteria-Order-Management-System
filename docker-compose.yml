@@ -1,0 +1,166 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: prototype2-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: prototype2-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  identity:
+    build: ./services/identity
+    container_name: prototype2-identity
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=identity
+      - PORT=7001
+      - MONGO_URI=mongodb://mongo:27017/identity_db
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_SECRET=${ADMIN_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=prototype2-identity
+      - JWT_AUDIENCE=prototype2
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "7001:7001"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/identity:/app
+      - /app/node_modules
+    restart: "no"
+
+  gateway:
+    build: ./services/gateway
+    container_name: prototype2-gateway
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=gateway
+      - PORT=7002
+      - MONGO_URI=mongodb://mongo:27017/orders_db
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_SECRET=${ADMIN_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=prototype2-identity
+      - JWT_AUDIENCE=prototype2
+      - CHOKIDAR_USEPOLLING=true
+      - ORDER_STATUS_CHANNEL=orders:status
+      - IDENTITY_URL=http://identity:7001
+      - STOCK_URL=http://stock:7003
+    ports:
+      - "7002:7002"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/gateway:/app
+      - /app/node_modules
+    restart: "no"
+
+  stock:
+    build: ./services/stock
+    container_name: prototype2-stock
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=stock
+      - PORT=7003
+      - MONGO_URI=mongodb://mongo:27017/stock_db
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_SECRET=${ADMIN_SECRET}
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "7003:7003"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/stock:/app
+      - /app/node_modules
+    restart: "no"
+
+  kitchen:
+    build: ./services/kitchen
+    container_name: prototype2-kitchen
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=kitchen
+      - PORT=7004
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_SECRET=${ADMIN_SECRET}
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "7004:7004"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/kitchen:/app
+      - /app/node_modules
+    restart: "no"
+
+  notification:
+    build: ./services/notification
+    container_name: prototype2-notification
+    environment:
+      - NODE_ENV=development
+      - SERVICE_NAME=notification
+      - PORT=7005
+      - REDIS_URL=redis://redis:6379
+      - ADMIN_SECRET=${ADMIN_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=prototype2-identity
+      - JWT_AUDIENCE=prototype2
+      - ORDER_STATUS_CHANNEL=orders:status
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "7005:7005"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/notification:/app
+      - /app/node_modules
+    restart: "no"
+
+  frontend:
+    build: ./frontend
+    container_name: prototype2-frontend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_IDENTITY_URL=http://localhost:7001
+      - VITE_GATEWAY_URL=http://localhost:7002
+      - VITE_NOTIFICATION_URL=http://localhost:7005
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: "no"
+
+volumes:
+  mongo_data:
