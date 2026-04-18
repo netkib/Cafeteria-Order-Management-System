@@ -1,15 +1,8 @@
-# Cafeteria Microservices System (DevSprint 2026)
+# Cafeteria Microservices System
 
-A production-style **microservices cafeteria ordering system** built for DevSprint 2026 (DevOps & Microservices).  
+A production-style **microservices cafeteria ordering system** built . 
 Students can browse menu items, place orders, and track progress in real-time (no polling). Admins can monitor service health/metrics, run chaos testing, recharge wallets, and manage inventory and students.
 
----
-
-## Quick Links
-
-- **Demo Video (≤ 3 min):** https://drive.google.com/file/d/1KqkgZD0tmcHOo466Rnc4MuKQFkqUxoeb/view?usp=drive_link
-
----
 
 ## Features
 
@@ -50,15 +43,7 @@ This system is **event-driven**:
 5. Notification service forwards events to students over Socket.IO rooms
 6. Student UI updates in real-time
 
-Full details: `docs/architecture.md`
 
----
-
-## Tech Stack (with reasons)
-
-Full report: `docs/tools-and-stack.md`
-
----
 
 ## Local Setup 
 
@@ -146,7 +131,6 @@ Metrics endpoints:
 
 ---
 
-## Demo Flow (Suggested, ≤ 3 minutes)
 
 ### Admin demo
 
@@ -207,23 +191,6 @@ prototype2/
 └─ frontend/
 ```
 
----
-
-## AI Tools Used (Required Disclosure)
-
-- **ChatGPT (OpenAI):** used for architecture brainstorming, API contract review, edge-case analysis (idempotency, retries), and documentation drafting.
-
----
-
-## Team
-
-- Md. Mubashir-Ul-Hasan
-- Muhaiminul Haque
-- Mugdho Ranin Rahman Mahee
-
----
-
-FOR ANY QUERY - hasibhasan6678@gmail.com
 
 ## License
 
